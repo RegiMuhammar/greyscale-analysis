@@ -15,3 +15,8 @@ pnpm-debug.log*
 tmp/
 .DS_Store
 Thumbs.db
+
+# Internal planning and reference documents
+*.docx
+IMPLEMENTATION_PLAN.md
+DEPLOYMENT.md
