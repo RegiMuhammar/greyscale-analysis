@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { AnalysisCanvas } from "./components/AnalysisCanvas";
 import { AppHeader } from "./components/AppHeader";
 import { DownloadButtons } from "./components/DownloadButtons";
-import { ObserverForm } from "./components/ObserverForm";
 import { QualityNotice } from "./components/QualityNotice";
 import { UploadZone } from "./components/UploadZone";
 import { Button } from "./components/ui/button";
@@ -77,14 +76,14 @@ export default function App() {
         <section className="min-w-0">
           <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#666666]">
-              Textile colour lab
+              Grey scale textile test
             </p>
             <h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-[#0a0a0a] sm:text-5xl lg:text-6xl">
-              Fabric colour shift analyser
+              Analisis kelunturan warna kain
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#555555] sm:text-lg">
-              Upload foto sampel sebelum dan sesudah pencucian, lalu baca perubahan warna lewat
-              RGB, value, LAB, Delta E, histogram, dan matrix perubahan.
+              Upload foto sebelum dan sesudah pencucian, lihat nilai greyscale masing-masing foto,
+              lalu baca ringkasan perbedaannya lewat chart visual.
             </p>
           </div>
         </section>
@@ -131,7 +130,7 @@ export default function App() {
 
           <div className="mt-6 flex flex-col gap-3 border-t border-[#eeeeee] pt-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm leading-6 text-[#666666]">
-              Setelah kedua foto masuk, jalankan konversi dan tampilkan panel analisis greyscale.
+              Setelah kedua foto masuk, jalankan konversi dan tampilkan nilai greyscale serta chart perbandingan.
             </p>
             <Button
               className="rounded-full px-6"
@@ -143,7 +142,7 @@ export default function App() {
                 }, 50);
               }}
             >
-              Convert & Analysis Greyscale
+              Analisis Greyscale
             </Button>
           </div>
         </section>
@@ -156,6 +155,8 @@ export default function App() {
               greyscaleBefore={beforeGreyscale.result}
               greyscaleAfter={afterGreyscale.result}
               analysis={colorAnalysis.analysis}
+              observer={observer}
+              onObserverChange={setObserver}
               isAnalysing={
                 colorAnalysis.isAnalysing ||
                 beforeGreyscale.isProcessing ||
@@ -163,8 +164,6 @@ export default function App() {
               }
               error={colorAnalysis.error || beforeGreyscale.error || afterGreyscale.error}
             />
-
-            <ObserverForm value={observer} onChange={setObserver} />
 
             <DownloadButtons
               before={beforeUpload.image}

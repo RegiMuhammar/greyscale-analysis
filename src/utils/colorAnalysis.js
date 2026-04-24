@@ -225,10 +225,12 @@ async function createMatrix(beforeSrc, afterSrc) {
 }
 
 function matrixColor(intensity, valueDelta) {
-  const alpha = clamp(intensity / 100, 0.08, 0.92);
-  if (valueDelta > 4) return `rgba(37, 99, 235, ${alpha})`;
-  if (valueDelta < -4) return `rgba(217, 119, 6, ${alpha})`;
-  return `rgba(17, 24, 39, ${alpha})`;
+  if (intensity < 3) return "#f7f7f7";
+
+  const alpha = clamp(0.24 + intensity / 95, 0.24, 1);
+  if (valueDelta > 4) return `rgba(29, 78, 216, ${alpha})`;
+  if (valueDelta < -4) return `rgba(180, 83, 9, ${alpha})`;
+  return `rgba(124, 58, 237, ${alpha})`;
 }
 
 function makeInsight(pair) {
