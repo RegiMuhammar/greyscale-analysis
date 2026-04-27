@@ -1,7 +1,7 @@
 export const GREY_SCALE_GRADES = [
   {
     grade: "5",
-    label: "Tidak ada staining/perubahan visual",
+    label: "Tidak ada perubahan warna visual",
     severity: "best",
     patches: ["#f7f7f7", "#f7f7f7"],
   },

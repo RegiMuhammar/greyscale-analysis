@@ -4,6 +4,7 @@ import { AnalysisCanvas } from "./components/AnalysisCanvas";
 import { AppHeader } from "./components/AppHeader";
 import { DownloadButtons } from "./components/DownloadButtons";
 import { QualityNotice } from "./components/QualityNotice";
+import { RoiCropModal } from "./components/RoiSelector";
 import { UploadZone } from "./components/UploadZone";
 import { Button } from "./components/ui/button";
 import { useColorAnalysis } from "./hooks/useColorAnalysis";
@@ -16,23 +17,41 @@ const initialObserver = {
   notes: "",
 };
 
+const initialRoi = { x: 0.2, y: 0.2, width: 0.6, height: 0.6 };
+const fullRoi = { x: 0, y: 0, width: 1, height: 1 };
+
 export default function App() {
   const beforeUpload = useImageUpload();
   const afterUpload = useImageUpload();
   const beforeGreyscale = useGreyscale(beforeUpload.image?.file);
   const afterGreyscale = useGreyscale(afterUpload.image?.file);
-  const colorAnalysis = useColorAnalysis(beforeUpload.image?.url, afterUpload.image?.url);
-  const [observer, setObserver] = useState(initialObserver);
+  const [beforeRoi, setBeforeRoi] = useState(initialRoi);
+  const [afterRoi, setAfterRoi] = useState(initialRoi);
+  const [appliedBeforeRoi, setAppliedBeforeRoi] = useState(initialRoi);
+  const [appliedAfterRoi, setAppliedAfterRoi] = useState(initialRoi);
+  const [beforeRoiConfirmed, setBeforeRoiConfirmed] = useState(false);
+  const [afterRoiConfirmed, setAfterRoiConfirmed] = useState(false);
+  const [selectionDirty, setSelectionDirty] = useState(false);
+  const [cropTarget, setCropTarget] = useState(null);
   const [analysisStarted, setAnalysisStarted] = useState(false);
+  const colorAnalysis = useColorAnalysis(
+    analysisStarted ? beforeUpload.image?.url : null,
+    analysisStarted ? afterUpload.image?.url : null,
+    appliedBeforeRoi,
+    appliedAfterRoi,
+  );
+  const [observer, setObserver] = useState(initialObserver);
 
   const hasAnyData = Boolean(
     beforeUpload.image || afterUpload.image || observer.name || observer.grade || observer.notes,
   );
   const photosReady = Boolean(beforeUpload.image && afterUpload.image);
+  const analysisReady = photosReady && beforeRoiConfirmed && afterRoiConfirmed;
 
   const flowStatus = useMemo(() => {
     if (!beforeUpload.image && !afterUpload.image) return "Upload dua foto untuk memulai.";
     if (!beforeUpload.image || !afterUpload.image) return "Lengkapi foto sebelum dan sesudah pencucian.";
+    if (!beforeRoiConfirmed || !afterRoiConfirmed) return "Tetapkan area kain untuk kedua foto sebelum analisis.";
     if (beforeGreyscale.isProcessing || afterGreyscale.isProcessing || colorAnalysis.isAnalysing) {
       return "Mengkonversi dan menganalisis perubahan warna.";
     }
@@ -44,9 +63,11 @@ export default function App() {
     afterGreyscale.isProcessing,
     afterGreyscale.result,
     afterUpload.image,
+    afterRoiConfirmed,
     beforeGreyscale.isProcessing,
     beforeGreyscale.result,
     beforeUpload.image,
+    beforeRoiConfirmed,
     colorAnalysis.analysis,
     colorAnalysis.isAnalysing,
   ]);
@@ -54,18 +75,64 @@ export default function App() {
   const resetAll = () => {
     beforeUpload.reset();
     afterUpload.reset();
+    setBeforeRoi(initialRoi);
+    setAfterRoi(initialRoi);
+    setAppliedBeforeRoi(initialRoi);
+    setAppliedAfterRoi(initialRoi);
+    setBeforeRoiConfirmed(false);
+    setAfterRoiConfirmed(false);
+    setSelectionDirty(false);
+    setCropTarget(null);
     setObserver(initialObserver);
     setAnalysisStarted(false);
   };
 
   const setBeforeFile = (file) => {
     setAnalysisStarted(false);
-    beforeUpload.setFile(file);
+    setBeforeRoi(initialRoi);
+    setAppliedBeforeRoi(initialRoi);
+    setBeforeRoiConfirmed(false);
+    setSelectionDirty(false);
+    if (beforeUpload.setFile(file)) setCropTarget("before");
   };
 
   const setAfterFile = (file) => {
     setAnalysisStarted(false);
-    afterUpload.setFile(file);
+    setAfterRoi(initialRoi);
+    setAppliedAfterRoi(initialRoi);
+    setAfterRoiConfirmed(false);
+    setSelectionDirty(false);
+    if (afterUpload.setFile(file)) setCropTarget("after");
+  };
+
+  const confirmCrop = () => {
+    if (cropTarget === "before") setBeforeRoiConfirmed(true);
+    if (cropTarget === "after") setAfterRoiConfirmed(true);
+    if (analysisStarted) setSelectionDirty(true);
+    setCropTarget(null);
+  };
+
+  const useFullPhotoForCrop = () => {
+    if (cropTarget === "before") {
+      setBeforeRoi(fullRoi);
+      setBeforeRoiConfirmed(true);
+    }
+    if (cropTarget === "after") {
+      setAfterRoi(fullRoi);
+      setAfterRoiConfirmed(true);
+    }
+    if (analysisStarted) setSelectionDirty(true);
+    setCropTarget(null);
+  };
+
+  const runAnalysis = () => {
+    setAppliedBeforeRoi({ ...beforeRoi });
+    setAppliedAfterRoi({ ...afterRoi });
+    setSelectionDirty(false);
+    setAnalysisStarted(true);
+    window.setTimeout(() => {
+      document.getElementById("analysis-canvas-heading")?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
   };
 
   return (
@@ -110,8 +177,15 @@ export default function App() {
               image={beforeUpload.image}
               error={beforeUpload.error}
               onFile={setBeforeFile}
+              roi={beforeRoi}
+              roiConfirmed={beforeRoiConfirmed}
+              onEditArea={() => setCropTarget("before")}
               onReset={() => {
                 setAnalysisStarted(false);
+                setBeforeRoi(initialRoi);
+                setAppliedBeforeRoi(initialRoi);
+                setBeforeRoiConfirmed(false);
+                setSelectionDirty(false);
                 beforeUpload.reset();
               }}
             />
@@ -121,8 +195,15 @@ export default function App() {
               image={afterUpload.image}
               error={afterUpload.error}
               onFile={setAfterFile}
+              roi={afterRoi}
+              roiConfirmed={afterRoiConfirmed}
+              onEditArea={() => setCropTarget("after")}
               onReset={() => {
                 setAnalysisStarted(false);
+                setAfterRoi(initialRoi);
+                setAppliedAfterRoi(initialRoi);
+                setAfterRoiConfirmed(false);
+                setSelectionDirty(false);
                 afterUpload.reset();
               }}
             />
@@ -134,13 +215,8 @@ export default function App() {
             </p>
             <Button
               className="rounded-full px-6"
-              disabled={!photosReady}
-              onClick={() => {
-                setAnalysisStarted(true);
-                window.setTimeout(() => {
-                  document.getElementById("analysis-canvas-heading")?.scrollIntoView({ behavior: "smooth" });
-                }, 50);
-              }}
+              disabled={!analysisReady}
+              onClick={runAnalysis}
             >
               Analisis Greyscale
             </Button>
@@ -155,6 +231,14 @@ export default function App() {
               greyscaleBefore={beforeGreyscale.result}
               greyscaleAfter={afterGreyscale.result}
               analysis={colorAnalysis.analysis}
+              beforeRoi={appliedBeforeRoi}
+              afterRoi={appliedAfterRoi}
+              onBeforeRoiChange={setBeforeRoi}
+              onAfterRoiChange={setAfterRoi}
+              selectionDirty={selectionDirty}
+              onUpdateBeforeSelection={() => setCropTarget("before")}
+              onUpdateAfterSelection={() => setCropTarget("after")}
+              onRefreshAnalysis={runAnalysis}
               observer={observer}
               onObserverChange={setObserver}
               isAnalysing={
@@ -170,6 +254,7 @@ export default function App() {
               after={afterUpload.image}
               greyscaleBefore={beforeGreyscale.result}
               greyscaleAfter={afterGreyscale.result}
+              analysis={colorAnalysis.analysis}
               observer={observer}
             />
           </>
@@ -177,6 +262,16 @@ export default function App() {
 
         <QualityNotice />
       </main>
+
+      <RoiCropModal
+        title={cropTarget === "before" ? "Pilih area kain - sebelum pencucian" : "Pilih area kain - sesudah pencucian"}
+        image={cropTarget === "before" ? beforeUpload.image : cropTarget === "after" ? afterUpload.image : null}
+        roi={cropTarget === "before" ? beforeRoi : afterRoi}
+        onChange={cropTarget === "before" ? setBeforeRoi : setAfterRoi}
+        onConfirm={confirmCrop}
+        onCancel={() => setCropTarget(null)}
+        onUseFull={useFullPhotoForCrop}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { analyseColorPair } from "../utils/colorAnalysis";
 
-export function useColorAnalysis(beforeUrl, afterUrl) {
+export function useColorAnalysis(beforeUrl, afterUrl, beforeRoi, afterRoi) {
   const [analysis, setAnalysis] = useState(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [error, setError] = useState("");
@@ -19,7 +19,7 @@ export function useColorAnalysis(beforeUrl, afterUrl) {
     setIsAnalysing(true);
     setError("");
 
-    analyseColorPair(beforeUrl, afterUrl)
+    analyseColorPair(beforeUrl, afterUrl, beforeRoi, afterRoi)
       .then((result) => {
         if (!cancelled) setAnalysis(result);
       })
@@ -36,7 +36,7 @@ export function useColorAnalysis(beforeUrl, afterUrl) {
     return () => {
       cancelled = true;
     };
-  }, [beforeUrl, afterUrl]);
+  }, [beforeUrl, afterUrl, beforeRoi, afterRoi]);
 
   return { analysis, isAnalysing, error };
 }

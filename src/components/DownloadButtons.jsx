@@ -1,12 +1,14 @@
-import { Download, FileImage } from "lucide-react";
+import { Download, FileImage, FileText } from "lucide-react";
 import { useState } from "react";
-import { createCompositePng, downloadDataUrl } from "../utils/download";
+import { createAnalysisReportPdf, createCompositePng, downloadDataUrl } from "../utils/download";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 
-export function DownloadButtons({ before, after, greyscaleBefore, greyscaleAfter, observer }) {
+export function DownloadButtons({ before, after, greyscaleBefore, greyscaleAfter, analysis, observer }) {
   const [isComposing, setIsComposing] = useState(false);
+  const [isCreatingReport, setIsCreatingReport] = useState(false);
   const outputsReady = Boolean(before?.url && after?.url && greyscaleBefore?.dataUrl && greyscaleAfter?.dataUrl);
+  const reportReady = outputsReady && Boolean(analysis);
   const selectedGrade = observer.grade || "Belum dipilih";
 
   const downloadComposite = async () => {
@@ -26,6 +28,23 @@ export function DownloadButtons({ before, after, greyscaleBefore, greyscaleAfter
     }
   };
 
+  const downloadAnalysisReport = async () => {
+    if (!reportReady) return;
+    setIsCreatingReport(true);
+    try {
+      await createAnalysisReportPdf({
+        originalBefore: before.url,
+        originalAfter: after.url,
+        greyscaleBefore: greyscaleBefore.dataUrl,
+        greyscaleAfter: greyscaleAfter.dataUrl,
+        analysis,
+        observer,
+      });
+    } finally {
+      setIsCreatingReport(false);
+    }
+  };
+
   return (
     <section className="research-panel p-4 sm:p-5" aria-labelledby="download-heading">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -34,13 +53,13 @@ export function DownloadButtons({ before, after, greyscaleBefore, greyscaleAfter
             Download output
           </h2>
           <p className="mt-1 text-sm leading-6 text-[#667085]">
-            Unduh PNG greyscale individual atau komposit untuk lampiran laporan.
+            Unduh PNG greyscale, komposit, atau PDF report analisis dengan data dan grafik.
           </p>
         </div>
         <Badge tone={observer.grade ? "success" : "warning"}>Grade: {selectedGrade}</Badge>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Button
           className="w-full"
           disabled={!greyscaleBefore?.dataUrl}
@@ -60,6 +79,10 @@ export function DownloadButtons({ before, after, greyscaleBefore, greyscaleAfter
         <Button className="w-full" disabled={!outputsReady || isComposing} onClick={downloadComposite}>
           <FileImage className="h-4 w-4" aria-hidden="true" />
           {isComposing ? "Membuat komposit..." : "Download komposit"}
+        </Button>
+        <Button className="w-full" disabled={!reportReady || isCreatingReport} onClick={downloadAnalysisReport}>
+          <FileText className="h-4 w-4" aria-hidden="true" />
+          {isCreatingReport ? "Membuat report..." : "Export analisis PDF"}
         </Button>
       </div>
     </section>

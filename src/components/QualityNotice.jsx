@@ -19,8 +19,8 @@ export function QualityNotice() {
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-[#111827]">Bukan kalibrasi resmi</h2>
             <p className="mt-1 text-sm leading-6 text-[#667085]">
-              Chart ISO 105-A03 adalah referensi visual. Penilaian akhir tetap dilakukan oleh
-              observer.
+              Chart ISO 105-A02 adalah referensi visual untuk membaca perubahan warna. Penilaian
+              akhir tetap dilakukan oleh observer.
             </p>
           </div>
         </div>

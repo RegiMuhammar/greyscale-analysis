@@ -10,7 +10,7 @@ export function useImageUpload() {
     const validationError = validateImageFile(file);
     if (validationError) {
       setError(validationError);
-      return;
+      return false;
     }
 
     setError("");
@@ -26,6 +26,7 @@ export function useImageUpload() {
         type: file.type,
       };
     });
+    return true;
   }, []);
 
   const reset = useCallback(() => {

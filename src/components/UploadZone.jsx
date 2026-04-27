@@ -1,12 +1,14 @@
-import { ImagePlus, RefreshCw, Upload, X } from "lucide-react";
+import { CheckCircle2, Crop, ImagePlus, RefreshCw, ScanLine, Upload, X } from "lucide-react";
 import { useId, useRef, useState } from "react";
+import { useCroppedPreview } from "../hooks/useCroppedPreview";
 import { formatBytes } from "../utils/image";
 import { Button } from "./ui/button";
 
-export function UploadZone({ title, description, image, error, onFile, onReset }) {
+export function UploadZone({ title, description, image, error, onFile, onReset, roi, roiConfirmed = false, onEditArea }) {
   const inputId = useId();
   const inputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
+  const croppedPreview = useCroppedPreview(image?.url, roi, 420);
 
   const handleDrop = (event) => {
     event.preventDefault();
@@ -70,7 +72,7 @@ export function UploadZone({ title, description, image, error, onFile, onReset }
         {image ? (
           <div className="grid gap-4 sm:grid-cols-[132px_1fr] sm:items-center">
             <div className="figure-frame aspect-[4/3] overflow-hidden rounded-[8px]">
-              <img src={image.url} alt="" className="h-full w-full object-contain" />
+              <img src={croppedPreview || image.url} alt="" className="h-full w-full object-contain" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
@@ -78,10 +80,24 @@ export function UploadZone({ title, description, image, error, onFile, onReset }
                 <span className="truncate">{image.name}</span>
               </div>
               <p className="mt-1 text-sm text-[#667085]">{formatBytes(image.size)}</p>
-              <Button className="mt-4" variant="secondary" onClick={openFileDialog}>
-                <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                Ganti foto
-              </Button>
+              <div className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${
+                roiConfirmed
+                  ? "border-[#bbf7d0] bg-[#f0fdf4] text-[#15803d]"
+                  : "border-[#fed7aa] bg-[#fff7ed] text-[#c2410c]"
+              }`}>
+                {roiConfirmed ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : <ScanLine className="h-3.5 w-3.5" aria-hidden="true" />}
+                {roiConfirmed ? "Area kain ditetapkan" : "Area kain belum ditetapkan"}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button variant="secondary" onClick={onEditArea} disabled={!image}>
+                  <Crop className="h-4 w-4" aria-hidden="true" />
+                  {roiConfirmed ? "Edit area" : "Pilih area"}
+                </Button>
+                <Button variant="secondary" onClick={openFileDialog}>
+                  <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                  Ganti foto
+                </Button>
+              </div>
             </div>
           </div>
         ) : (

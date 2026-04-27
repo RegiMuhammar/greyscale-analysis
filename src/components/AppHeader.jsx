@@ -18,7 +18,7 @@ export function AppHeader() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge tone="blue">Client-side</Badge>
-          <Badge tone="neutral">ISO 105-A03 visual reference</Badge>
+          <Badge tone="neutral">ISO 105-A02 visual reference</Badge>
         </div>
       </div>
     </header>

@@ -1,7 +1,8 @@
 import { loadImage } from "./image";
 
-const HISTOGRAM_BINS = 32;
+const HISTOGRAM_BINS = 256;
 const MATRIX_SIZE = 18;
+const DEFAULT_ROI = { x: 0, y: 0, width: 1, height: 1 };
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -87,20 +88,46 @@ function gradeDescription(grade) {
   return descriptions[grade] || "Estimasi belum tersedia";
 }
 
-function imageToData(src, maxDimension = 240) {
+function normalizeRoi(roi) {
+  if (!roi) return DEFAULT_ROI;
+  const x = clamp(Number(roi.x) || 0, 0, 0.98);
+  const y = clamp(Number(roi.y) || 0, 0, 0.98);
+  const width = clamp(Number(roi.width) || 1, 0.02, 1 - x);
+  const height = clamp(Number(roi.height) || 1, 0.02, 1 - y);
+  return { x, y, width, height };
+}
+
+function sourceRectFromRoi(image, roi) {
+  const normalized = normalizeRoi(roi);
+  const sx = Math.round(normalized.x * image.naturalWidth);
+  const sy = Math.round(normalized.y * image.naturalHeight);
+  const sw = Math.max(1, Math.round(normalized.width * image.naturalWidth));
+  const sh = Math.max(1, Math.round(normalized.height * image.naturalHeight));
+  return {
+    roi: normalized,
+    sx,
+    sy,
+    sw: Math.min(sw, image.naturalWidth - sx),
+    sh: Math.min(sh, image.naturalHeight - sy),
+  };
+}
+
+function imageToData(src, roi, maxDimension = 360) {
   return loadImage(src).then((image) => {
-    const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
-    const width = Math.max(1, Math.round(image.naturalWidth * scale));
-    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const source = sourceRectFromRoi(image, roi);
+    const scale = Math.min(1, maxDimension / Math.max(source.sw, source.sh));
+    const width = Math.max(1, Math.round(source.sw * scale));
+    const height = Math.max(1, Math.round(source.sh * scale));
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext("2d", { willReadFrequently: true });
-    context.drawImage(image, 0, 0, width, height);
+    context.drawImage(image, source.sx, source.sy, source.sw, source.sh, 0, 0, width, height);
     return {
       image,
       width,
       height,
+      roi: source.roi,
       imageData: context.getImageData(0, 0, width, height),
     };
   });
@@ -110,7 +137,29 @@ function emptyHistogram() {
   return Array.from({ length: HISTOGRAM_BINS }, () => 0);
 }
 
-function analyseImageData({ image, width, height, imageData }) {
+function percentileFromHistogram(histogram, pixelCount, percentile) {
+  const target = pixelCount * percentile;
+  let cumulative = 0;
+
+  for (let index = 0; index < histogram.length; index += 1) {
+    cumulative += histogram[index];
+    if (cumulative >= target) return index;
+  }
+
+  return histogram.length - 1;
+}
+
+function distributionStats(histogram, mean, squareMean, pixelCount) {
+  return {
+    mean: round(mean, 2),
+    median: percentileFromHistogram(histogram, pixelCount, 0.5),
+    p10: percentileFromHistogram(histogram, pixelCount, 0.1),
+    p90: percentileFromHistogram(histogram, pixelCount, 0.9),
+    stdDev: round(Math.sqrt(Math.max(0, squareMean - mean ** 2)), 2),
+  };
+}
+
+function analyseImageData({ image, width, height, roi, imageData }) {
   const histogram = {
     r: emptyHistogram(),
     g: emptyHistogram(),
@@ -118,6 +167,7 @@ function analyseImageData({ image, width, height, imageData }) {
     value: emptyHistogram(),
   };
   const sums = { r: 0, g: 0, b: 0, value: 0 };
+  const squareSums = { r: 0, g: 0, b: 0, value: 0 };
   const { data } = imageData;
   const pixelCount = width * height;
 
@@ -135,6 +185,10 @@ function analyseImageData({ image, width, height, imageData }) {
     sums.g += g;
     sums.b += b;
     sums.value += value;
+    squareSums.r += r ** 2;
+    squareSums.g += g ** 2;
+    squareSums.b += b ** 2;
+    squareSums.value += value ** 2;
     histogram.r[binR] += 1;
     histogram.g[binG] += 1;
     histogram.b[binB] += 1;
@@ -148,22 +202,33 @@ function analyseImageData({ image, width, height, imageData }) {
   };
   const averageValue = sums.value / pixelCount;
   const lab = rgbToLab(averageRgb);
+  const stats = {
+    r: distributionStats(histogram.r, averageRgb.r, squareSums.r / pixelCount, pixelCount),
+    g: distributionStats(histogram.g, averageRgb.g, squareSums.g / pixelCount, pixelCount),
+    b: distributionStats(histogram.b, averageRgb.b, squareSums.b / pixelCount, pixelCount),
+    value: distributionStats(histogram.value, averageValue, squareSums.value / pixelCount, pixelCount),
+  };
 
   return {
     naturalWidth: image.naturalWidth,
     naturalHeight: image.naturalHeight,
     sampleWidth: width,
     sampleHeight: height,
+    roi,
+    roiCoveragePercent: roi ? roi.width * roi.height * 100 : 100,
     averageRgb,
     averageHex: rgbToHex(averageRgb),
     averageValue,
     lab,
     histogram,
+    stats,
   };
 }
 
-async function createMatrix(beforeSrc, afterSrc) {
+async function createMatrix(beforeSrc, afterSrc, beforeRoi, afterRoi) {
   const [beforeImage, afterImage] = await Promise.all([loadImage(beforeSrc), loadImage(afterSrc)]);
+  const beforeSource = sourceRectFromRoi(beforeImage, beforeRoi);
+  const afterSource = sourceRectFromRoi(afterImage, afterRoi);
   const beforeCanvas = document.createElement("canvas");
   const afterCanvas = document.createElement("canvas");
   beforeCanvas.width = MATRIX_SIZE;
@@ -173,8 +238,28 @@ async function createMatrix(beforeSrc, afterSrc) {
 
   const beforeContext = beforeCanvas.getContext("2d", { willReadFrequently: true });
   const afterContext = afterCanvas.getContext("2d", { willReadFrequently: true });
-  beforeContext.drawImage(beforeImage, 0, 0, MATRIX_SIZE, MATRIX_SIZE);
-  afterContext.drawImage(afterImage, 0, 0, MATRIX_SIZE, MATRIX_SIZE);
+  beforeContext.drawImage(
+    beforeImage,
+    beforeSource.sx,
+    beforeSource.sy,
+    beforeSource.sw,
+    beforeSource.sh,
+    0,
+    0,
+    MATRIX_SIZE,
+    MATRIX_SIZE,
+  );
+  afterContext.drawImage(
+    afterImage,
+    afterSource.sx,
+    afterSource.sy,
+    afterSource.sw,
+    afterSource.sh,
+    0,
+    0,
+    MATRIX_SIZE,
+    MATRIX_SIZE,
+  );
 
   const beforeData = beforeContext.getImageData(0, 0, MATRIX_SIZE, MATRIX_SIZE).data;
   const afterData = afterContext.getImageData(0, 0, MATRIX_SIZE, MATRIX_SIZE).data;
@@ -266,13 +351,47 @@ function makeInsight(pair) {
   };
 }
 
-export async function analyseColorPair(beforeSrc, afterSrc) {
+function makeQualityNotes(beforeData, afterData) {
+  const notes = [];
+  const beforeCoverage = beforeData.roiCoveragePercent || 100;
+  const afterCoverage = afterData.roiCoveragePercent || 100;
+  const valueDelta = afterData.averageValue - beforeData.averageValue;
+  const spreadDelta = afterData.stats.value.stdDev - beforeData.stats.value.stdDev;
+
+  if (beforeCoverage > 92 && afterCoverage > 92) {
+    notes.push({
+      tone: "warning",
+      title: "ROI masih seluruh foto",
+      body: "Pilih area kain agar background, meja, orang, atau langit tidak ikut dihitung.",
+    });
+  }
+
+  if (Math.abs(valueDelta) > 25) {
+    notes.push({
+      tone: "warning",
+      title: "Perbedaan pencahayaan besar",
+      body: "Delta value tinggi. Pastikan perubahan ini berasal dari kain, bukan exposure atau lighting.",
+    });
+  }
+
+  if (Math.abs(spreadDelta) > 18) {
+    notes.push({
+      tone: "neutral",
+      title: "Sebaran tonal berubah",
+      body: "Std dev value berubah besar. Cek bayangan, highlight, atau tekstur yang ikut masuk ROI.",
+    });
+  }
+
+  return notes;
+}
+
+export async function analyseColorPair(beforeSrc, afterSrc, beforeRoi, afterRoi) {
   if (!beforeSrc || !afterSrc) return null;
 
   const [beforeData, afterData, matrix] = await Promise.all([
-    imageToData(beforeSrc).then(analyseImageData),
-    imageToData(afterSrc).then(analyseImageData),
-    createMatrix(beforeSrc, afterSrc),
+    imageToData(beforeSrc, beforeRoi).then(analyseImageData),
+    imageToData(afterSrc, afterRoi).then(analyseImageData),
+    createMatrix(beforeSrc, afterSrc, beforeRoi, afterRoi),
   ]);
 
   const delta = {
@@ -302,6 +421,7 @@ export async function analyseColorPair(beforeSrc, afterSrc) {
       ? (delta.value / beforeData.averageValue) * 100
       : 0,
     matrix,
+    quality: makeQualityNotes(beforeData, afterData),
   };
 
   return {

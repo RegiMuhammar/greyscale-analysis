@@ -5,11 +5,11 @@ export function GreyscaleChart() {
     <section className="research-panel p-4 sm:p-5" aria-labelledby="chart-heading">
       <div className="mb-4">
         <h2 id="chart-heading" className="text-lg font-semibold text-[#111827]">
-          Referensi ISO 105-A03
+          Referensi ISO 105-A02
         </h2>
         <p className="mt-1 text-sm leading-6 text-[#667085]">
-          Paired grey patches berikut adalah referensi visual ilustratif untuk membantu observer,
-          bukan chip kalibrasi resmi.
+          Paired grey patches berikut membantu observer membaca estimasi perubahan warna terhadap
+          skala 5 sampai 1. Ini referensi visual ilustratif, bukan chip kalibrasi resmi.
         </p>
       </div>
 
