@@ -142,29 +142,29 @@ export default function App() {
       <main id="workspace" className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <section className="min-w-0">
           <div className="min-w-0">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#666666]">
-              Grey scale textile test
+            <p className="font-mono text-xs font-medium uppercase tracking-[0.16em] text-neutral-600">
+              Observasi Kelunturan Warna ISO 105-A03
             </p>
-            <h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-[#0a0a0a] sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 max-w-4xl font-display text-3xl font-medium leading-[1.1] tracking-[-0.8px] text-neutral-950 sm:text-4xl lg:text-5xl">
               Analisis kelunturan warna kain
             </h1>
-            <p className="mt-5 max-w-3xl text-base leading-8 text-[#555555] sm:text-lg">
-              Upload foto sebelum dan sesudah pencucian, lihat nilai greyscale masing-masing foto,
-              lalu baca ringkasan perbedaannya lewat chart visual.
+            <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
+              Unggah foto sebelum dan sesudah pencucian, tetapkan area kain (ROI), lalu baca estimasi grade ISO,
+              perbedaan nilai greyscale, Delta E CIE76, dan pergeseran channel warna secara lokal di browser.
             </p>
           </div>
         </section>
 
-        <section className="research-panel p-5 sm:p-6" aria-label="Upload foto sampel">
+        <section className="research-panel p-5 sm:p-6 border border-neutral-200" aria-label="Upload foto sampel">
           <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
-              <h2 className="text-xl font-semibold text-[#111111]">Input foto sampel</h2>
-              <div className="mt-3 flex flex-col gap-2 text-sm leading-6 text-[#555555] sm:flex-row sm:flex-wrap sm:gap-x-5">
-                <span><strong className="text-[#111111]">Status:</strong> {flowStatus}</span>
-                <span><strong className="text-[#111111]">Output:</strong> analisis lokal aktif setelah dua foto diinput.</span>
+              <h2 className="text-xl font-medium text-neutral-950">Input foto sampel</h2>
+              <div className="mt-2.5 flex flex-col gap-1.5 text-sm leading-6 text-neutral-600 sm:flex-row sm:flex-wrap sm:gap-x-5">
+                <span><strong className="font-medium text-neutral-950">Status:</strong> {flowStatus}</span>
+                <span><strong className="font-medium text-neutral-950">Privasi:</strong> foto diproses 100% di browser tanpa upload server.</span>
               </div>
             </div>
-            <Button className="shrink-0 rounded-full px-5" variant="secondary" onClick={resetAll} disabled={!hasAnyData}>
+            <Button className="shrink-0 rounded-[8px] px-4" variant="secondary" onClick={resetAll} disabled={!hasAnyData}>
               <RotateCcw className="h-4 w-4" aria-hidden="true" />
               Reset
             </Button>
@@ -209,12 +209,12 @@ export default function App() {
             />
           </div>
 
-          <div className="mt-6 flex flex-col gap-3 border-t border-[#eeeeee] pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm leading-6 text-[#666666]">
-              Setelah kedua foto masuk, jalankan konversi dan tampilkan nilai greyscale serta chart perbandingan.
+          <div className="mt-6 flex flex-col gap-3 border-t border-neutral-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm leading-6 text-neutral-600">
+              Setelah kedua foto masuk dan area kain dikonfirmasi, jalankan analisis untuk menampilkan nilai greyscale dan grafik.
             </p>
             <Button
-              className="rounded-full px-6"
+              className="rounded-[8px] px-6"
               disabled={!analysisReady}
               onClick={runAnalysis}
             >

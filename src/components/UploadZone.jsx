@@ -30,11 +30,11 @@ export function UploadZone({ title, description, image, error, onFile, onReset, 
 
   return (
     <div className="research-panel overflow-hidden">
-      <div className="border-b border-[#D9DEE7] px-4 py-3 sm:px-5">
+      <div className="border-b border-neutral-200 px-4 py-3 sm:px-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-[#111827]">{title}</h2>
-            <p className="mt-1 text-sm text-[#667085]">{description}</p>
+            <h2 className="text-base font-semibold text-neutral-950">{title}</h2>
+            <p className="mt-1 text-sm text-neutral-600">{description}</p>
           </div>
           {image ? (
             <Button
@@ -66,24 +66,24 @@ export function UploadZone({ title, description, image, error, onFile, onReset, 
         {...dropEvents}
         className={[
           "block p-4 transition-colors sm:p-5",
-          isDragging ? "bg-[#EFF6FF]" : "bg-white hover:bg-[#F8FAFC]",
+          isDragging ? "bg-neutral-100" : "bg-white hover:bg-neutral-50",
         ].join(" ")}
       >
         {image ? (
           <div className="grid gap-4 sm:grid-cols-[132px_1fr] sm:items-center">
-            <div className="figure-frame aspect-[4/3] overflow-hidden rounded-[8px]">
+            <div className="figure-frame aspect-[4/3] overflow-hidden rounded-[8px] border border-neutral-200">
               <img src={croppedPreview || image.url} alt="" className="h-full w-full object-contain" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
-                <ImagePlus className="h-4 w-4 flex-none text-[#2563EB]" aria-hidden="true" />
+              <div className="flex items-center gap-2 text-sm font-semibold text-neutral-950">
+                <ImagePlus className="h-4 w-4 flex-none text-neutral-950" aria-hidden="true" />
                 <span className="truncate">{image.name}</span>
               </div>
-              <p className="mt-1 text-sm text-[#667085]">{formatBytes(image.size)}</p>
-              <div className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${
+              <p className="mt-1 font-mono text-xs text-neutral-600">{formatBytes(image.size)}</p>
+              <div className={`mt-3 inline-flex items-center gap-2 rounded-[6px] border px-2.5 py-1 text-xs font-medium ${
                 roiConfirmed
-                  ? "border-[#bbf7d0] bg-[#f0fdf4] text-[#15803d]"
-                  : "border-[#fed7aa] bg-[#fff7ed] text-[#c2410c]"
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                  : "border-amber-300 bg-amber-50 text-amber-900"
               }`}>
                 {roiConfirmed ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : <ScanLine className="h-3.5 w-3.5" aria-hidden="true" />}
                 {roiConfirmed ? "Area kain ditetapkan" : "Area kain belum ditetapkan"}
@@ -102,7 +102,7 @@ export function UploadZone({ title, description, image, error, onFile, onReset, 
           </div>
         ) : (
           <div
-            className="focus-ring flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-[8px] border border-dashed border-[#B8C4D8] px-4 text-center"
+            className="focus-ring flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-[8px] border-2 border-dashed border-neutral-300 bg-neutral-50/50 px-4 text-center hover:border-neutral-950 hover:bg-neutral-50"
             role="button"
             tabIndex={0}
             aria-controls={inputId}
@@ -114,17 +114,17 @@ export function UploadZone({ title, description, image, error, onFile, onReset, 
               }
             }}
           >
-            <Upload className="h-9 w-9 text-[#2563EB]" aria-hidden="true" />
-            <p className="mt-3 text-sm font-semibold text-[#111827]">Upload foto</p>
-            <p className="mt-1 max-w-sm text-sm leading-6 text-[#667085]">
-              Klik untuk memilih file atau drag & drop. Format JPG, PNG, WEBP hingga 10MB.
+            <Upload className="h-8 w-8 text-neutral-950" aria-hidden="true" />
+            <p className="mt-3 text-sm font-semibold text-neutral-950">Upload foto sampel</p>
+            <p className="mt-1 max-w-sm text-xs leading-5 text-neutral-600">
+              Pilih file atau drag & drop. Format JPG, PNG, WEBP hingga 10MB.
             </p>
           </div>
         )}
       </div>
 
       {error ? (
-        <div className="border-t border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm font-medium text-[#991B1B] sm:px-5">
+        <div className="border-t border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900 sm:px-5">
           {error}
         </div>
       ) : null}
