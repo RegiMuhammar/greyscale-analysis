@@ -28,7 +28,8 @@ the structure is kept, every claim and visual is replaced with this product's re
 
 - Radius: panels 20px, cards 12px, buttons 8px. Never pill.
 - Shadow: one layered shadow, only on the live demo card in the hero, because it is the product window resting on the panel.
-- No glass, no glow, no background grid.
+- No glass, no full-page glow, no background grid.
+- Hero optical sensor visual: 6-card array (2-column grid) with animated mesh gradients in primary `#1493ff` and complementary hues (amber `#ff8814`, coral `#f43f5e`, emerald `#10b981`, ochre `#f59e0b`, violet `#8b5cf6`) with grain noise and blur, positioned above hero stats. Serves as visual representation of the optical sensor channels across the 400-700 nm D65 spectrum.
 
 ## Identity motif
 

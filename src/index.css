@@ -109,3 +109,106 @@ img {
 .soft-pulse {
   animation: soft-pulse 1.8s ease-in-out infinite;
 }
+
+/* Hero Mesh Gradient Animation */
+@keyframes mesh-drift-1 {
+  0%, 100% {
+    transform: translate(-10%, -10%) scale(1);
+  }
+  33% {
+    transform: translate(15%, 5%) scale(1.12);
+  }
+  66% {
+    transform: translate(-5%, 15%) scale(0.95);
+  }
+}
+
+@keyframes mesh-drift-2 {
+  0%, 100% {
+    transform: translate(15%, -15%) scale(1.05);
+  }
+  33% {
+    transform: translate(-15%, 10%) scale(0.92);
+  }
+  66% {
+    transform: translate(10%, 15%) scale(1.15);
+  }
+}
+
+@keyframes mesh-drift-3 {
+  0%, 100% {
+    transform: translate(-5%, 15%) scale(0.95);
+  }
+  33% {
+    transform: translate(10%, -10%) scale(1.08);
+  }
+  66% {
+    transform: translate(-15%, -5%) scale(1.02);
+  }
+}
+
+.hero-mesh-blob-1 {
+  animation: mesh-drift-1 12s ease-in-out infinite;
+}
+
+.hero-mesh-blob-2 {
+  animation: mesh-drift-2 15s ease-in-out infinite;
+}
+
+.hero-mesh-blob-3 {
+  animation: mesh-drift-3 10s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-mesh-blob-1,
+  .hero-mesh-blob-2,
+  .hero-mesh-blob-3 {
+    animation: none;
+  }
+}
+
+/* Slide Right: Grey -> Color -> Grey (approx 1s slide transition, parallel) */
+@keyframes slide-right-color-reveal {
+  0%, 15% {
+    clip-path: inset(0 100% 0 0);
+  }
+  41%, 59% {
+    clip-path: inset(0 0 0 0);
+  }
+  85%, 100% {
+    clip-path: inset(0 0 0 100%);
+  }
+}
+
+@keyframes slide-right-bg-shift {
+  0%, 15% {
+    transform: translateX(-24px);
+  }
+  41%, 59% {
+    transform: translateX(0);
+  }
+  85%, 100% {
+    transform: translateX(24px);
+  }
+}
+
+.slide-right-color-layer {
+  animation: slide-right-color-reveal 3.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: clip-path;
+}
+
+.slide-right-color-bg {
+  animation: slide-right-bg-shift 3.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: inherit;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-right-color-layer,
+  .slide-right-color-bg {
+    animation: none;
+    clip-path: none;
+    transform: none;
+  }
+}
+

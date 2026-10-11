@@ -98,10 +98,193 @@ function SiteNav() {
   );
 }
 
+const SENSOR_CHANNELS = [
+  {
+    id: "blue",
+    name: "CIE -b* Blue",
+    hex: "#1493ff",
+    secondary: "#38bdf8",
+    wave: "450 nm",
+    badge: "Primary",
+  },
+  {
+    id: "amber",
+    name: "CIE +b* Amber",
+    hex: "#ff8814",
+    secondary: "#fdba74",
+    wave: "590 nm",
+    badge: "Complement",
+  },
+  {
+    id: "coral",
+    name: "CIE +a* Coral",
+    hex: "#f43f5e",
+    secondary: "#fb7185",
+    wave: "630 nm",
+    badge: "Warm shift",
+  },
+  {
+    id: "emerald",
+    name: "CIE -a* Emerald",
+    hex: "#10b981",
+    secondary: "#34d399",
+    wave: "520 nm",
+    badge: "Wash shift",
+  },
+  {
+    id: "ochre",
+    name: "Solar Ochre",
+    hex: "#f59e0b",
+    secondary: "#fcd34d",
+    wave: "575 nm",
+    badge: "Fading",
+  },
+  {
+    id: "violet",
+    name: "Deep Violet",
+    hex: "#8b5cf6",
+    secondary: "#a78bfa",
+    wave: "410 nm",
+    badge: "UV scale",
+  },
+];
+
+const SWIPE_DELAYS = ["0.0s", "1.9s", "0.7s", "2.6s", "1.3s", "3.1s"];
+
+function MeshCard({ channel, index }) {
+  const delay1 = `${(index * 1.6) % 8}s`;
+  const delay2 = `${(index * 2.3) % 9}s`;
+  const swipeDelay = SWIPE_DELAYS[index % SWIPE_DELAYS.length];
+
+  return (
+    <div
+      aria-hidden="true"
+      className="relative h-24 sm:h-28 w-full overflow-hidden rounded-[14px] border border-neutral-200/90 bg-white shadow-xs transition-colors hover:border-neutral-300"
+    >
+      {/* 1. Base Layer: GREYSCALE STATE */}
+      <div className="absolute inset-0 flex flex-col justify-between p-2.5 sm:p-3 bg-neutral-100/70">
+        {/* Grey monochrome mesh blobs */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+          <div
+            className="hero-mesh-blob-1 absolute h-24 w-24 rounded-full blur-2xl filter bg-neutral-300"
+            style={{
+              opacity: 0.5,
+              animationDelay: delay1,
+              transformOrigin: "center center",
+            }}
+          />
+          <div
+            className="hero-mesh-blob-2 absolute -top-3 -right-3 h-20 w-20 rounded-full blur-2xl filter bg-neutral-200"
+            style={{
+              opacity: 0.6,
+              animationDelay: delay2,
+              transformOrigin: "center center",
+            }}
+          />
+        </div>
+
+        {/* SVG Grain Noise Texture */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.16] mix-blend-overlay"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          }}
+        />
+
+        {/* Greyscale metadata */}
+        <div className="relative z-0 flex items-center justify-between gap-1">
+          <span className="truncate font-mono text-[10px] font-medium tracking-tight text-neutral-500">
+            {channel.name}
+          </span>
+          <span className="h-2 w-2 flex-none rounded-full bg-neutral-300" />
+        </div>
+        <div className="relative z-0 flex items-baseline justify-between font-mono text-[9px] text-neutral-400">
+          <span className="uppercase">{channel.badge}</span>
+          <span className="tabular-nums font-medium text-neutral-500">{channel.wave}</span>
+        </div>
+      </div>
+
+      {/* 2. Overlay Layer: VIBRANT COLOR STATE (Slides right to appear, slides right to exit) */}
+      <div
+        className="slide-right-color-layer pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-2.5 sm:p-3"
+        style={{ animationDelay: swipeDelay }}
+      >
+        {/* Dynamic color background & rich mesh blobs */}
+        <div
+          className="slide-right-color-bg absolute inset-0 flex items-center justify-center overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, ${channel.hex}22 0%, ${channel.secondary}20 50%, #ffffff 100%)`,
+            animationDelay: swipeDelay,
+          }}
+        >
+          {/* Blob 1: Card primary */}
+          <div
+            className="hero-mesh-blob-1 absolute h-24 w-24 rounded-full blur-2xl filter"
+            style={{
+              backgroundColor: channel.hex,
+              opacity: 0.85,
+              animationDelay: delay1,
+              transformOrigin: "center center",
+            }}
+          />
+          {/* Blob 2: Secondary complement */}
+          <div
+            className="hero-mesh-blob-2 absolute -top-3 -right-3 h-20 w-20 rounded-full blur-2xl filter"
+            style={{
+              backgroundColor: channel.secondary,
+              opacity: 0.70,
+              animationDelay: delay2,
+              transformOrigin: "center center",
+            }}
+          />
+          {/* Radial softening */}
+          <div className="absolute inset-0 bg-radial from-transparent via-white/5 to-white/40" />
+        </div>
+
+        {/* SVG Grain Noise */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.24] mix-blend-overlay"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          }}
+        />
+
+        {/* High-contrast color metadata */}
+        <div className="relative z-0 flex items-center justify-between gap-1">
+          <span className="truncate font-mono text-[10px] font-semibold tracking-tight text-neutral-900">
+            {channel.name}
+          </span>
+          <span
+            className="h-2 w-2 flex-none rounded-full"
+            style={{
+              backgroundColor: channel.hex,
+              boxShadow: `0 0 8px 1px ${channel.hex}99`,
+            }}
+          />
+        </div>
+        <div className="relative z-0 flex items-baseline justify-between font-mono text-[9px]">
+          <span className="uppercase font-medium text-neutral-700">{channel.badge}</span>
+          <span className="tabular-nums font-bold text-neutral-950">{channel.wave}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroMeshGrid() {
+  return (
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full">
+      {SENSOR_CHANNELS.map((channel, index) => (
+        <MeshCard key={channel.id} channel={channel} index={index} />
+      ))}
+    </div>
+  );
+}
+
 function Hero({ demo }) {
   return (
     <section aria-labelledby="hero-heading" className="pt-14 sm:pt-20 lg:pt-28">
-      <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex max-w-[560px] flex-col gap-5">
           <h1
             id="hero-heading"
@@ -123,16 +306,19 @@ function Hero({ demo }) {
           </div>
         </div>
 
-        <dl className="grid grid-cols-2 gap-6 sm:max-w-[360px] lg:pb-1">
-          <div className="flex flex-col gap-1">
-            <dt className="order-2 text-sm leading-5 text-neutral-600">Tingkat grade, termasuk setengah tingkat</dt>
-            <dd className="order-1 font-display text-[32px] font-medium leading-none text-neutral-950">9</dd>
-          </div>
-          <div className="flex flex-col gap-1">
-            <dt className="order-2 text-sm leading-5 text-neutral-600">Foto diproses di browser, tidak diunggah</dt>
-            <dd className="order-1 font-display text-[32px] font-medium leading-none text-neutral-950">Lokal</dd>
-          </div>
-        </dl>
+        <div className="flex w-full flex-col gap-6 sm:max-w-[420px] lg:max-w-[440px]">
+          <HeroMeshGrid />
+          <dl className="grid grid-cols-2 gap-6 pt-1">
+            <div className="flex flex-col gap-1">
+              <dt className="order-2 text-sm leading-5 text-neutral-600">Tingkat grade, termasuk setengah tingkat</dt>
+              <dd className="order-1 font-display text-[32px] font-medium leading-none text-neutral-950">9</dd>
+            </div>
+            <div className="flex flex-col gap-1">
+              <dt className="order-2 text-sm leading-5 text-neutral-600">Foto diproses di browser, tidak diunggah</dt>
+              <dd className="order-1 font-display text-[32px] font-medium leading-none text-neutral-950">Lokal</dd>
+            </div>
+          </dl>
+        </div>
       </div>
 
       <div
